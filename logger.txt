@@ -348,3 +348,4 @@ amazon query:iPad
 amazon query:iPad
 amazon query:iPad
 amazon query:iPad
+amazon query:shoes
