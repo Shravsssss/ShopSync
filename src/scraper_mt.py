@@ -50,25 +50,37 @@ class search(Thread):
             self.query = form.formatSearchQuery(self.query)
         URL = self.config['url'] + self.query
 
-        # fetch url
+        # Fetch the URL content
         page = self.httpsGet(URL)
         if not page:
             self.result = []
+            return
 
-        # begin parsing page content
+        # Begin parsing page content
         try:
-            results = page.find_all(
-                self.config['item_component'], self.config['item_indicator'])
+            results = page.find_all(self.config['item_component'], self.config['item_indicator'])
         except AttributeError as e:
             print(f"An AttributeError occurred: {e}")
             results = None
         products = []
         for res in results:
             title = res.select(self.config['title_indicator'])
-            price = res.select(self.config['price_indicator'])
+            price = []
+            for selector in self.config['price_indicator']:
+                if selector and isinstance(selector, str):
+                    price_part = res.select_one(selector)
+                else:
+                    # Handle the case where the selector is not valid
+                    print(f"Invalid selector: {selector}")
+                    price_part = None
+                if price_part:
+                    price.append(price_part)
+
             link = res.select(self.config['link_indicator'])
-            product = form.formatResult(
-                self.config['site'], title, price, link)
+
+            # Use the formatResult function with BeautifulSoup elements
+            product = form.formatResult(self.config['site'], title, price, link)
+
             if product['title'] != '' and product['price'] != '' and product['link'] != '':
                 products.append(product)
         self.result = products
@@ -182,8 +194,7 @@ def scrape(args, scrapers):
             t_az.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_az.result, sort_by, args['des'])[
-                    :args.get('num', len(t_az.result))]
+                local = list(form.sortList(t_az.result, sort_by, args['des']))[:args.get('num', len(t_az.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -191,8 +202,7 @@ def scrape(args, scrapers):
             t_bb.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_bb.result, sort_by, args['des'])[
-                    :args.get('num', len(t_bb.result))]
+                local = list(form.sortList(t_bb.result, sort_by, args['des']))[:args.get('num', len(t_bb.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -200,8 +210,7 @@ def scrape(args, scrapers):
             t_cc.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_cc.result, sort_by, args['des'])[
-                    :args.get('num', len(t_cc.result))]
+                local = list(form.sortList(t_cc.result, sort_by, args['des']))[:args.get('num', len(t_cc.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -209,8 +218,7 @@ def scrape(args, scrapers):
             t_eb.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_eb.result, sort_by, args['des'])[
-                    :args.get('num', len(t_eb.result))]
+                local = list(form.sortList(t_eb.result, sort_by, args['des']))[:args.get('num', len(t_eb.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -218,8 +226,7 @@ def scrape(args, scrapers):
             t_tg.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_tg.result, sort_by, args['des'])[
-                    :args.get('num', len(t_tg.result))]
+                local = list(form.sortList(t_tg.result, sort_by, args['des']))[:args.get('num', len(t_tg.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -227,8 +234,7 @@ def scrape(args, scrapers):
             t_wm.join()
             i += 1
             for sort_by in args['sort']:
-                local = form.sortList(t_wm.result, sort_by, args['des'])[
-                    :args.get('num', len(t_wm.result))]
+                local = list(form.sortList(t_wm.result, sort_by, args['des']))[:args.get('num', len(t_wm.result))]
             overall.extend(local)
             if i == len(scrapers):
                 break
@@ -238,7 +244,7 @@ def scrape(args, scrapers):
                 break
 
     for sort_by in args['sort']:
-        overall = form.sortList(overall, sort_by, args['des'])
+        local = list(form.sortList(overall, sort_by, args['des']))
 
     print('Before return time: ', datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 

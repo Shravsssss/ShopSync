@@ -77,6 +77,10 @@ title = """
             <p>Discover unparalleled savings effortlessly.</p>
         </div>
     </div>
+"""
+
+# Style for the application
+css_style = """
     <style>
         .appview-container{
             background-color: #efefef !important;
@@ -94,6 +98,7 @@ title = """
             margin-top: -24px !important;
             margin-bottom: -24px !important;
         }
+        
         .centered-svg{
             margin-top: -48px !important;
         }
@@ -125,6 +130,8 @@ title = """
     </style>
 """
 
+# Render the title and CSS style
+st.markdown(css_style, unsafe_allow_html=True)
 st.markdown(title, unsafe_allow_html=True)
 
 # Display SVG Image
@@ -441,7 +448,11 @@ if st.button('Search') and product and website:
                 return 'https://' + url
         dataframe['Link'] = dataframe['Link'].apply(add_http_if_not_present)
 
-        st.cache(dataframe)
+        st.cache_data()
+        def cached_data(dataframe):
+            return dataframe
+        
+        cached_data=cached_data(dataframe)
         st.success("Data successfully scraped and cached.")
 
         st.balloons()
@@ -455,15 +466,32 @@ if 'dataframe' in st.session_state and isinstance(st.session_state.dataframe, pd
     st.markdown("<h1 style='text-align: center; color: #1DC5A9;'>RESULT</h1>",
                 unsafe_allow_html=True)
 
-    st.session_state.dataframe['Price'] = pd.to_numeric(
-        st.session_state.dataframe['Price'], errors='coerce')
-    price_range = st.slider("Price Range", min_value=st.session_state.dataframe['Price'].min(), max_value=st.session_state.dataframe['Price'].max(
-    ), value=(st.session_state.dataframe['Price'].min(), st.session_state.dataframe['Price'].max()))
+    st.session_state.dataframe['Price'] = pd.to_numeric(st.session_state.dataframe['Price'], errors='coerce')
 
-    filtered_df = st.session_state.dataframe[(st.session_state.dataframe["Price"] >= price_range[0]) & (
-        st.session_state.dataframe["Price"] <= price_range[1])]
-    st.dataframe(filtered_df.style.apply(highlight_row, axis=None), column_config={
-                 "Link": st.column_config.LinkColumn("URL to website")},)
+    min_price = float(st.session_state.dataframe['Price'].min())
+    max_price = float(st.session_state.dataframe['Price'].max())
+
+    # Ensure that min_value is less than max_value for the slider
+    if min_price < max_price:
+        price_range = st.slider(
+            "Price Range", 
+            min_value=min_price, 
+            max_value=max_price, 
+            value=(min_price, max_price)
+        )
+
+        filtered_df = st.session_state.dataframe[
+            (st.session_state.dataframe["Price"] >= price_range[0]) & 
+            (st.session_state.dataframe["Price"] <= price_range[1])
+        ]
+    else:
+        st.write("The price range is fixed at:", min_price)
+        filtered_df = st.session_state.dataframe
+
+    st.dataframe(
+        filtered_df.style.apply(highlight_row, axis=None), 
+        column_config={"Link": st.column_config.LinkColumn("URL to website")},
+    )
 
 st.write('<span style="font-size: 24px;">Add for favorites</span>',
          unsafe_allow_html=True)

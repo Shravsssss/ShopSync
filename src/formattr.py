@@ -17,30 +17,39 @@ the required format.
 
 def formatResult(website, titles, prices, links):
     """
-    The formatResult function takes the scraped HTML as input, and extracts the
-    necessary values from the HTML code. Ex. extracting a price '$19.99' from
+    The formatResult function takes the scraped HTML as input and extracts the
+    necessary values from the HTML code, e.g., extracting a price '$19.99' from
     a paragraph tag.
     """
     title, price, link = '', '', ''
-    if titles:
+
+    # Extract title
+    if titles and hasattr(titles[0], 'get_text'):
         title = titles[0].get_text().strip()
+    elif isinstance(titles, str):
+        title = titles.strip()
     if prices:
-        price = prices[0].get_text().strip()
-    if links:
+        price_parts = [p.get_text().strip() if hasattr(p, 'get_text') else str(p).strip() for p in prices]
+        price = ''.join(price_parts).replace('\n', '').replace(' ', '')
+
+    # Extract link
+    if links and hasattr(links[0], 'get'):
         link = links[0]['href']
+    elif isinstance(links, str):
+        link = links.strip()
     product = {
         'timestamp': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         "title": html.unescape(title),
         "price": price,
-        "link": f'www.{website}.com{link}',
+        "link": f'www.{website}.com{link}' if link and not link.startswith('http') else link,
         "website": website,
     }
-    print(product['title'])
-    if website=='walmart':
-        if link[0:4]=='http':
-            product['link']=f'{link}'
-    if website == 'costco':
-        product['link'] = f'{link}'
+
+    # Adjust the link for specific websites if necessary
+    if website in ['walmart', 'costco']:
+        if link.startswith('http'):
+            product['link'] = link
+
     return product
 
 
