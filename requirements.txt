@@ -41,7 +41,6 @@ pygments==2.18.0
 Pympler==1.1
 pyshorteners==1.0.1
 python-dateutil==2.9.0.post0
-pywin32==306
 referencing==0.35.1
 requests==2.32.3
 rich==13.9.1
